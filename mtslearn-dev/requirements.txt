@@ -1,0 +1,6 @@
+
+### `requirements.txt`
+
+```txt
+numpy
+scikit-learn
