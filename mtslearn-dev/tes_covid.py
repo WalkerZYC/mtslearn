@@ -15,6 +15,11 @@ df.to_csv('../test_data/data/covid19_data/train/375prep.csv')
 
 # 确保数据按时间顺序排序
 df.sort_values(by=['PATIENT_ID', 'RE_DATE'], inplace=True)
-evaluator = fe.FeatureExtractorAndModelEvaluator(df, 'PATIENT_ID', 'RE_DATE',  'outcome', ['eGFR', 'creatinine'],['mean','max'])
+fe = fe.FeatureExtractorAndModelEvaluator(df, 'PATIENT_ID', 'RE_DATE',  'outcome', ['eGFR', 'creatinine'],['mean','max'],include_duration=True)
 # evaluator.run(model_type='lasso', fill=True, fill_method='mean', test_size=0.3, balance_data= True)
-evaluator.run(model_type='cox', fill=True, fill_method='mean', cross_val=True)
+fe.run(model_type='logit', fill=True, fill_method='mean', cross_val=True)
+fe.plot_time_series()
+fe.plot_heatmap()
+fe.plot_boxplot()
+fe.plot_violinplot()
+fe.plot_correlation_matrix()
