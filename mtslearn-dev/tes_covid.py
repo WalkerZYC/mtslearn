@@ -17,10 +17,10 @@ df.to_csv('../test_data/data/covid19_data/train/375prep.csv')
 df.sort_values(by=['PATIENT_ID', 'RE_DATE'], inplace=True)
 fe = fe.FeatureExtractorAndModelEvaluator(df, 'PATIENT_ID', 'RE_DATE',  'outcome', ['eGFR', 'creatinine'],['mean','max'],include_duration=True)
 fe.run(model_type='xgboost', fill=True, fill_method='mean', test_size=0.3, balance_data= True,plot_importance=True)
-# fe.run(model_type='logit', fill=True, fill_method='mean', cross_val=True,plot_importance=True)
+#fe.run(model_type='logit', fill=True, fill_method='mean', cross_val=True,plot_importance=True)
 
 # Example calls to describe_data
 fe.describe_data(plot_type='boxplot', value_col='eGFR')
-fe.describe_data(plot_type='violinplot', value_col='eGFR')
+#fe.describe_data(plot_type='violinplot', value_col='eGFR')
 fe.describe_data(plot_type='correlation_matrix', feature1='eGFR', feature2='creatinine')
 

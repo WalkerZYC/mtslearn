@@ -196,8 +196,10 @@ class FeatureExtractorAndModelEvaluator:
             print("Only one class present in y_test. ROC AUC score is not defined.")
 
         cm = confusion_matrix(y_test, y_pred)
+        print("Confusion Matrix:")
+        print(cm)
         plt.figure(figsize=(8, 6))
-        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=True, annot_kws={"size": 16}, vmin=0, vmax=max(cm.max(), 1))
         plt.xlabel("Predicted")
         plt.ylabel("Actual")
         plt.title("Confusion Matrix")
@@ -430,7 +432,7 @@ class FeatureExtractorAndModelEvaluator:
 
                 cm = confusion_matrix(y_test, y_pred)
                 plt.figure(figsize=(8, 6))
-                sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+                sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=True, annot_kws={"size": 16}, vmin=0, vmax=max(cm.max(), 1))
                 plt.xlabel("Predicted")
                 plt.ylabel("Actual")
                 plt.title("Confusion Matrix")
