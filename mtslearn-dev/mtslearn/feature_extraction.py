@@ -157,6 +157,38 @@ class FeatureExtractorAndModelEvaluator:
 
             return X_train, X_test, y_train, y_test
 
+    def plot_error_distribution(self, y_test, y_pred):
+        """
+        Plot the distribution of prediction errors.
+
+        Parameters:
+        - y_test: The true labels.
+        - y_pred: The predicted labels.
+        """
+        errors = y_test - y_pred
+        plt.figure(figsize=(10, 6))
+        sns.histplot(errors, kde=True)
+        plt.title("Error Distribution")
+        plt.xlabel("Prediction Error")
+        plt.ylabel("Frequency")
+        plt.show()
+
+    def plot_residuals(self, y_test, y_pred):
+        """
+        Plot the residuals to analyze the fit of the model.
+
+        Parameters:
+        - y_test: The true labels.
+        - y_pred: The predicted labels.
+        """
+        residuals = y_test - y_pred
+        plt.figure(figsize=(10, 6))
+        plt.scatter(y_pred, residuals, alpha=0.5)
+        plt.axhline(0, color='r', linestyle='--')
+        plt.title("Residuals Plot")
+        plt.xlabel("Predicted Values")
+        plt.ylabel("Residuals")
+        plt.show()
     def evaluate_model(self, model, X_test, y_test, y_prob):
         """
         Evaluate the performance of a classification model.
@@ -206,6 +238,10 @@ class FeatureExtractorAndModelEvaluator:
         plt.show()
         plt.close()
 
+        # 添加误差分布图和残差图
+        self.plot_error_distribution(y_test, y_pred)
+        self.plot_residuals(y_test, y_pred)
+
     def evaluate_lasso_model(self, model, X_test, y_test, y_pred):
         """
         Evaluate the performance of a Lasso regression model.
@@ -229,6 +265,11 @@ class FeatureExtractorAndModelEvaluator:
         plt.ylabel("Predicted")
         plt.title("Actual vs Predicted")
         plt.show()
+
+        # 添加误差分布图和残差图
+        self.plot_error_distribution(y_test, y_pred)
+        self.plot_residuals(y_test, y_pred)
+
 
     def describe_data(self, plot_type, value_col=None, feature1=None, feature2=None):
         """
