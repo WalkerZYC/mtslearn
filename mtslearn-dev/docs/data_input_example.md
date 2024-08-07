@@ -49,19 +49,18 @@ fe = fe.FeModEvaluator(df, 'PATIENT_ID', 'RE_DATE',  'outcome', ['eGFR', 'creati
 
 ### Example of Initialization
 
-You can  download our example data at https://github.com/WalkerZYC/mtslearn/blob/main/test_data/data/covid19_data/train/375_patients.xlsx
+You can  download our example data at https://github.com/WalkerZYC/mtslearn/blob/main/test_data/data/covid19_data/train/375_patients_example.xlsx
 
 ```python
 import pandas as pd
-from  mtslearn.feature_extraction import FeModEvaluator
+import mtslearn.feature_extraction as fe
 
-# 加载Excel文件
-# file_path = '.../375_patients.xlsx'
-file_path = '../test_data/data/covid19_data/train/375_patients.xlsx'  # 请替换为你的文件路径
+# Uplode Excel Data
+file_path = '.../375_patients_example.xlsx' # Replece with your file path
 df = pd.read_excel(file_path)
 
-# Assuming 'df' is your DataFrame
+# Class Initialization
 fe = FeModEvaluator(df, 'PATIENT_ID', 'RE_DATE', 'outcome', ['eGFR', 'creatinine'], ['mean', 'max'], include_duration=True)
 ```
 
-This guide provides the essential format and usage details for integrating your dataset with the `FeModEvaluator` class. Ensure that your data, especially the time column, follows this structure for accurate feature extraction and model evaluation.
+This guide provides the essential format and usage details for integrating your dataset with the `FeModEvaluator` class. 
