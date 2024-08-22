@@ -54,8 +54,10 @@ fe = fe.FeModEvaluator(
     group_col='PATIENT_ID',
     time_col='RE_DATE',
     outcome_col='outcome',
-    value_cols=['eGFR', 'creatinine'],
-    selected_features=['mean', 'max'],
+    features_to_extract={
+        'eGFR': ['mean', 'max'],
+        'creatinine': ['mean']
+    },
     include_duration=True
 )
 ```

@@ -52,25 +52,27 @@ fe = fe.FeModEvaluator(
     group_col='PATIENT_ID', 
     time_col='RE_DATE',  
     outcome_col='outcome', 
-    value_cols=['eGFR', 'creatinine'], 
-    selected_features=['mean', 'max'], 
+    features_to_extract={
+        'eGFR': ['mean', 'max'],
+        'creatinine': ['mean']
+    }, 
     include_duration=True
 )
 ```
+### Parameters:
 
-- **Parameters:**
-   - `**df**`: The DataFrame containing your patient data.
-   - `**group_col**`: Column name to group the data by (e.g., patient ID).
-   - `**time_col**`: Column name representing the time of each record. This column should be in a format that can be parsed by `pandas.to_datetime`.
-      - Common formats include:
-         - `YYYY-MM-DD`
-         - `YYYY-MM-DD HH:MM:SS`
-         - `MM/DD/YYYY`
-         - `MM/DD/YYYY HH:MM:SS`
-   - `**outcome_col**`: Column name representing the outcome variable.
-   - `**value_cols**`: List of columns to extract features from.
-   - `**selected_features**`: List of selected features for model training (optional). If not provided, it defaults to the same columns as `value_cols`.
-   - `**include_duration**`: Boolean indicating whether to include the duration feature (calculated as the difference in days between the first and last timestamps for each group).
+- **df**: The DataFrame containing your patient data.
+- **group_col**: Column name to group the data by (e.g., patient ID).
+- **time_col**: Column name representing the time of each record. This column should be in a format that can be parsed by `pandas.to_datetime`. 
+  - Common formats include:
+    - `YYYY-MM-DD`
+    - `YYYY-MM-DD HH:MM:SS`
+    - `MM/DD/YYYY`
+    - `MM/DD/YYYY HH:MM:SS`
+- **outcome_col**: Column name representing the outcome variable.
+- **features_to_extract**: A dictionary where keys are column names to extract features from, and values are lists of features to calculate for each column.
+- **include_duration**: Boolean indicating whether to include the duration feature.
+
 ### **Feature Extraction Methods**
 #### **1. Extracting Basic Features**
 The `extract_basic_features` method extracts statistical features from a series of values:
