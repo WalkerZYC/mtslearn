@@ -3,7 +3,7 @@ import os
 import mtslearn.feature_extraction as fe
 
 # 加载Excel文件
-# file_path = '/Users/zhaoyuechao/Desktop/academic/Projects/ISMTS/test_data/data/covid19_data/train/375_patients.xlsx'
+# file_path = '/Users/zhaoyuechao/Desktop/academic/Projects/mtslearn/test_data/data/covid19_data/train/375_patients.xlsx'
 file_path = 'test_data/data/covid19_data/train/375_patients.xlsx'  # 请替换为你的文件路径
 df = pd.read_excel(file_path)
 

@@ -81,8 +81,8 @@ fe.describe_data(plot_type='boxplot', value_col='eGFR')
 fe.describe_data(plot_type='correlation_matrix', feature1='eGFR', feature2='creatinine')
 ```
 ## **Documentation**
-For detailed documentation, including advanced usage, customization options, and examples, refer to the [User Guide](./docs/user_guide.md).
+For detailed documentation, including advanced usage, customization options, and examples, refer to the [User Guide](./User Guide.md).
 ## **License**
-This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](mtslearn-dev/LICENSE) file for details.
 ## **Contact**
-For any questions or issues, please open an issue on GitHub or contact us at zhaoyuechao@stu.pku.edu.cn.
+For any questions or issues, please open an issue on GitHub or contact us at zycwalker11@gmail.com.
