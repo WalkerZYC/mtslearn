@@ -17,42 +17,39 @@ import random
 warnings.filterwarnings('ignore')
 
 class FeModEvaluator:
-    def __init__(self, df, group_col, time_col, outcome_col, value_cols, selected_features=None, include_duration=True):
+    def __init__(self, df, group_col, time_col, outcome_col, features_to_extract, include_duration=True):
         """
-        Initialize the FeatureExtractorAndModelEvaluator class.
+        Initialize the FeModEvaluator class.
 
         Parameters:
         - df: DataFrame containing the data.
         - group_col: Column name to group the data by (e.g., patient ID).
         - time_col: Column name representing the time of each record.
         - outcome_col: Column name representing the outcome variable.
-        - value_cols: List of columns to extract features from.
-        - selected_features: List of selected features for model training (optional).
+        - features_to_extract: Dictionary where keys are column names and values are lists of features to calculate.
         - include_duration: Boolean indicating whether to include the duration feature.
         """
         self.df = df
         self.group_col = group_col
         self.time_col = time_col
         self.outcome_col = outcome_col
-        self.value_cols = value_cols
-        self.selected_features = selected_features if selected_features else value_cols
+        self.features_to_extract = features_to_extract
         self.include_duration = include_duration
 
-    def extract_basic_features(self, values, fill_method='mean', fill=True):
+    def extract_basic_features(self, values, feature_list, fill_method='mean', fill=True):
         """
-        Extract basic statistical features from a series of values.
+        Extract specified statistical features from a series of values.
 
         Parameters:
         - values: Series of values to extract features from.
+        - feature_list: List of features to calculate.
         - fill_method: Method to fill missing values ('mean', 'median', or 'zero').
         - fill: Boolean indicating whether to fill missing values.
 
         Returns:
         - A dictionary of extracted features.
         """
-        missing_count = values.isna().sum()
-        total_count = len(values)
-        missing_ratio = missing_count / total_count
+        features = {}
 
         if fill:
             if fill_method == 'mean':
@@ -66,18 +63,26 @@ class FeModEvaluator:
         else:
             filled_values = values
 
-        diff_last_first = filled_values.iloc[-1] - filled_values.iloc[0]
+        for feature in feature_list:
+            if feature == 'mean':
+                features['mean'] = filled_values.mean()
+            elif feature == 'median':
+                features['median'] = filled_values.median()
+            elif feature == 'std':
+                features['std'] = filled_values.std()
+            elif feature == 'min':
+                features['min'] = filled_values.min()
+            elif feature == 'max':
+                features['max'] = filled_values.max()
+            elif feature == 'diff_last_first':
+                features['diff_last_first'] = filled_values.iloc[-1] - filled_values.iloc[0]
+            elif feature == 'missing_count':
+                features['missing_count'] = values.isna().sum()
+            elif feature == 'missing_ratio':
+                features['missing_ratio'] = values.isna().sum() / len(values)
+            else:
+                raise ValueError(f"Unknown feature: {feature}")
 
-        features = {
-            'mean': filled_values.mean(),
-            'median': filled_values.median(),
-            'std': filled_values.std(),
-            'min': filled_values.min(),
-            'max': filled_values.max(),
-            'diff_last_first': diff_last_first,
-            'missing_count': missing_count,
-            'missing_ratio': missing_ratio
-        }
         return features
 
     def extract_features_from_dataframe(self, fill=True, fill_method='mean'):
@@ -91,16 +96,15 @@ class FeModEvaluator:
         Returns:
         - A DataFrame of extracted features.
         """
-        # Ensure the DataFrame is sorted by group_col and time_col
         self.df = self.df.sort_values(by=[self.group_col, self.time_col])
         grouped = self.df.groupby(self.group_col)
         feature_dict = {}
 
         for name, group in grouped:
             features = {'ID': name}
-            for value_col in self.value_cols:
+            for value_col, feature_list in self.features_to_extract.items():
                 values = group.sort_values(by=self.time_col)[value_col]
-                extracted_features = self.extract_basic_features(values, fill_method=fill_method, fill=fill)
+                extracted_features = self.extract_basic_features(values, feature_list, fill_method=fill_method, fill=fill)
                 for feature_name, feature_value in extracted_features.items():
                     features[f"{value_col}_{feature_name}"] = feature_value
 
@@ -110,7 +114,8 @@ class FeModEvaluator:
             first_time = group[self.time_col].min()
             last_time = group[self.time_col].max()
             duration = (pd.to_datetime(last_time) - pd.to_datetime(first_time)).days
-            features['duration'] = duration
+            if self.include_duration:
+                features['duration'] = duration
 
             feature_dict[name] = features
 
@@ -138,8 +143,11 @@ class FeModEvaluator:
         imputer = SimpleImputer(strategy=fill_method)
         features_df = pd.DataFrame(imputer.fit_transform(features_df), columns=features_df.columns)
 
-        selected_columns = [col for col in features_df.columns if
-                            any(col.endswith(feature_type) for feature_type in self.selected_features)]
+        # 根据 features_to_extract 生成 selected_columns
+        selected_columns = []
+        for value_col, feature_list in self.features_to_extract.items():
+            for feature in feature_list:
+                selected_columns.append(f"{value_col}_{feature}")
 
         if self.include_duration:
             selected_columns += ['duration']
