@@ -1,0 +1,9 @@
+LICENSE
+README.md
+pyproject.toml
+setup.py
+mtslearn-dev/mtslearn/mtslearn.egg-info/PKG-INFO
+mtslearn-dev/mtslearn/mtslearn.egg-info/SOURCES.txt
+mtslearn-dev/mtslearn/mtslearn.egg-info/dependency_links.txt
+mtslearn-dev/mtslearn/mtslearn.egg-info/requires.txt
+mtslearn-dev/mtslearn/mtslearn.egg-info/top_level.txt
