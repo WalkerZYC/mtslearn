@@ -1,4 +1,5 @@
 import pandas as pd
+from fancyimpute import IterativeImputer
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -11,6 +12,7 @@ from sklearn.linear_model import LogisticRegression, LassoCV
 from xgboost import XGBClassifier
 from sklearn.impute import SimpleImputer
 from imblearn.over_sampling import SMOTE
+from imblearn.under_sampling import RandomUnderSampler
 import warnings
 import random
 
@@ -58,6 +60,10 @@ class FeModEvaluator:
                 filled_values = values.fillna(values.median())
             elif fill_method == 'zero':
                 filled_values = values.fillna(0)
+            elif fill_method == 'multiple':
+                # 使用多重填补
+                imputer = IterativeImputer(random_state=42)
+                filled_values = imputer.fit_transform(values.values.reshape(-1, 1)).flatten()
             else:
                 raise ValueError(f"Unknown fill method: {fill_method}")
         else:
@@ -121,29 +127,84 @@ class FeModEvaluator:
 
         return pd.DataFrame.from_dict(feature_dict, orient='index')
 
-    def prepare_data(self, fill=True, fill_method='mean', test_size=0.2, balance_data=True, cross_val=False):
+    def balance_data(self, features_df, target_df, method='none', **kwargs):
         """
-        Prepare the data for model training and evaluation.
+        Balance the dataset using specified methods.
+
+        Parameters:
+        - features_df: DataFrame containing features.
+        - target_df: Series containing the target variable.
+        - method: Method to use for balancing ('smote', 'random_under', 'ru', or 'none').
+        - kwargs: Additional parameters for the balancing methods.
+
+        Returns:
+        - Resampled features and target data.
+        """
+        if method == 'smote':
+            smote = SMOTE(**kwargs)
+            X_resampled, y_resampled = smote.fit_resample(features_df, target_df)
+            return X_resampled, y_resampled
+        elif method == 'random_under':
+            rus = RandomUnderSampler(**kwargs)
+            X_resampled, y_resampled = rus.fit_resample(features_df, target_df)
+            return X_resampled, y_resampled
+        elif method == 'ru':
+            # Implement RU balancing method (Reverse Under-sampling)
+            min_class_size = target_df.value_counts().min()  # Get the minimum class size
+            balanced_features = []
+            balanced_target = []
+
+            for class_label in target_df.unique():
+                class_features = features_df[target_df == class_label]
+                # Sample to match the minimum class size
+                if len(class_features) < min_class_size:
+                    sampled_features = class_features.sample(min_class_size, replace=True)
+                else:
+                    sampled_features = class_features.sample(min_class_size)
+                balanced_features.append(sampled_features)
+                balanced_target.append([class_label] * min_class_size)
+
+            balanced_features_df = pd.concat(balanced_features)  # Combine the features
+            balanced_target_df = pd.Series(np.concatenate(balanced_target))  # Combine the targets
+
+            return balanced_features_df, balanced_target_df
+        else:
+            return features_df, target_df  # No balancing applied
+
+    def prepare_data(self, fill=True, fill_method='mean', test_size=0.2, balance_data=True, balance_method='none',
+                     cross_val=False):
+        """
+        Prepare the data for modeling.
 
         Parameters:
         - fill: Boolean indicating whether to fill missing values.
-        - fill_method: Method to fill missing values ('mean', 'median', or 'zero').
-        - test_size: Proportion of the data to use for testing.
-        - balance_data: Boolean indicating whether to apply SMOTE for class balancing.
+        - fill_method: Method for filling missing values.
+        - test_size: Proportion of data to use as test set.
+        - balance_data: Boolean indicating whether to balance the data.
+        - balance_method: Method to use for balancing the data ('none', 'smote', 'random_under', 'ru').
         - cross_val: Boolean indicating whether to perform cross-validation.
 
         Returns:
-        - Depending on cross_val, returns either training and test sets or data and cross-validation strategy.
+        - Prepared features and target data, or X, y, and cross-validation strategy if cross_val is True.
         """
-        features_df = self.extract_features_from_dataframe(fill=fill, fill_method=fill_method)
 
+        # Extract features and fill missing values
+        features_df, target_df = self.extract_basic_features(self.df, self.features_to_extract, fill_method=fill_method,
+                                                             fill=fill)
+
+        # Display the first 5 rows of the features DataFrame for debugging
         print("Features DataFrame (First 5 lines):")
         print(features_df.head(5))
 
+        # Fill missing values using the specified fill method
         imputer = SimpleImputer(strategy=fill_method)
         features_df = pd.DataFrame(imputer.fit_transform(features_df), columns=features_df.columns)
 
-        # 根据 features_to_extract 生成 selected_columns
+        if fill_method == 'multiple':
+            imputer = IterativeImputer(random_state=42)
+            features_df = pd.DataFrame(imputer.fit_transform(features_df), columns=features_df.columns)
+
+        # Generate selected_columns based on features_to_extract
         selected_columns = []
         for value_col, feature_list in self.features_to_extract.items():
             for feature in feature_list:
@@ -152,20 +213,30 @@ class FeModEvaluator:
         if self.include_duration:
             selected_columns += ['duration']
 
-        X = features_df[selected_columns].copy()
-        y = features_df[self.outcome_col].copy()
+        X = features_df[selected_columns].copy()  # Feature DataFrame
+        y = target_df.copy()  # Target variable
 
+        # Perform cross-validation preparation if requested
         if cross_val:
             skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
             return X, y, skf
         else:
+            # Split the data into training and testing sets
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=42)
 
+            # Perform data balancing if requested
             if balance_data:
-                smote = SMOTE(random_state=42)
-                X_train, y_train = smote.fit_resample(X_train, y_train)
+                if balance_method == 'smote':
+                    smote = SMOTE(random_state=42)
+                    X_train, y_train = smote.fit_resample(X_train, y_train)
+                elif balance_method == 'random_under':
+                    rus = RandomUnderSampler(random_state=42)
+                    X_train, y_train = rus.fit_resample(X_train, y_train)
+                elif balance_method == 'ru':
+                    # Call the RU balancing method implemented in balance_data
+                    X_train, y_train = self.balance_data(X_train, y_train, method='ru')
 
-            return X_train, X_test, y_train, y_test
+            return X_train, X_test, y_train, y_test  # Return prepared training and testing sets
 
     def plot_error_distribution(self, y_test, y_pred, bins=50):
         """
